@@ -12,7 +12,7 @@ else:
     SecurityLevel = 3
     
 AccessTimestamp = datetime.datetime.now()
-Access_Info_String = CurrentUser + "---" + AccessTimestamp + str(sorted_flight_info[0])
+Access_Info_String = CurrentUser + "---" + AccessTimestamp + "---" + str(sorted_flight_info[0])
 # Example Access_info_String = Michael1---2022-06-20 16:06:13.176788---Bermuda
 # Can add takeoff location in addtion to the destination location to the Access Info Access_info_String
 
