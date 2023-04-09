@@ -1,9 +1,9 @@
 # Import socket module
 # client code
 import socket
- 
- 
-def Main():
+import threading
+
+def threaded(test_message):
     # local host IP '127.0.0.1'
     host = '10.171.227.118'
  
@@ -16,7 +16,8 @@ def Main():
     s.connect((host,port))
  
     # message you send to server
-    message = "shaurya says geeksforgeeks"
+    message = test_message
+
     while True:
  
         # message sent to server
@@ -37,6 +38,16 @@ def Main():
             break
     # close the connection
     s.close()
+    
+ 
+ 
+def Main():
+    test_message = "poop from client"
+    thread1 = threading.Thread(target=threaded, args=(test_message,))
+    thread1.start()
+    thread1.join()
+    print("done!")
+
  
 if __name__ == '__main__':
     Main()
