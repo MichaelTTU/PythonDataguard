@@ -36,6 +36,7 @@ def threaded(test_message):
  
         # data received from client
         data = c.recv(1024)
+        print("Received from client: " + str(data.decode('ascii')))
         if not data:
             print('Bye')
              
