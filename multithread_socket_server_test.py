@@ -22,8 +22,14 @@ def threaded(test_message):
     s.listen(5)
     print("socket is listening")
     
+    #while True:
     c, addr = s.accept()
     print_lock.acquire()
+        #if addr[0]:
+            #print("Connection established")
+            #break
+    
+            
     print('Connected to :', addr[0], ':', addr[1])
 
     while True:
@@ -58,8 +64,11 @@ def Main():
     # can be anything
     port = 12345
     t1 = threading.Thread(target=threaded, args=(test_message,))
+    t1.start()
+    t1.join()
     
  
  
 if __name__ == '__main__':
     Main()
+
