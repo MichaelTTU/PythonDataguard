@@ -6,8 +6,10 @@ Client Pi will have the Login and Security Verification + Option Select screen c
 Server Pi will have the API Call data storage code + security dict for each previous API call
 
 ------------------------------------------------------------------------
-WIP ideas:
+# WIP ideas:
 
+
+Active Connection Process:  
 -Pis connect, both active threads are now the connection threads  
 -Server Pi passes the API Dict to the connection thread  
 -Leave connection thead open in the manner that we are currently doing (with prompt from Client Pi to keep going)  
