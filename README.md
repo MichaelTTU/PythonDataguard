@@ -11,9 +11,9 @@ WIP ideas:
 -Pis connect, both active threads are now the connection threads  
 -Server Pi passes the API Dict to the connection thread  
 -Leave connection thead open in the manner that we are currently doing (with prompt from Client Pi to keep going)  
--Client Pi can pick options to create a custom API request string that is sent to Server
--Server opens new API Call thread (and passes the API Dict) from the connection thread, acquires the flight data
--Flight data is added to API Dict, API Call thread closes
--Active thread is now connection thread, where it sends the flight data to the Client Pi
--Connection waits for another prompt from Client Pi for a new API Call, or for list of previous API calls
--Request for a list of previous API calls would result in Server Pi sending all keys in API Dict
+-Client Pi can pick options to create a custom API request string that is sent to Server  
+-Server opens new API Call thread (and passes the API Dict) from the connection thread, acquires the flight data  
+-Flight data is added to API Dict, API Call thread closes  
+-Active thread is now connection thread, where it sends the flight data to the Client Pi  
+-Connection waits for another prompt from Client Pi for a new API Call, or for list of previous API calls  
+-Request for a list of previous API calls would result in Server Pi sending all keys in API Dict  
