@@ -46,7 +46,79 @@ def login(socket_conn):
     else:
         print("Invalid username or password")
         login(socket_conn)
-        
+   
+
+def view_api_calls(socket_conn, pick_previous_api_call):
+
+    message = "message"
+    message2 = "length received"
+    message_length = -1
+    keys_from_dict = []
+    info_from_dict = []
+    
+    while True:
+
+        test_func()
+        socket_conn.sendall(message.encode('ascii'))  # for the very first communication, client is the sender
+        data = socket_conn.recv(2048)
+        decoded_data = data.decode('ascii')
+        #length: 123
+        print('Received from the server :',str(decoded_data))
+        if decoded_data[0:6] == "length":  # if received message is a length message
+            message_length = decoded_data.split(":", -1)[1] 
+            ans = input("Receive message of length " + str(message_length) + "? (y/n)")
+            print(" ")
+            if ans == 'y':
+                socket_conn.sendall(message2.encode('ascii'))
+                for x in range(int(message_length)):  # receive all series of message of specified length
+                    data = socket_conn.recv(2048)
+                    decoded_data = data.decode('ascii')
+                    keys_from_dict = keys_from_dict + [decoded_data]
+                    socket_conn.sendall(message2.encode('ascii'))
+                    print(str(x) + ": " + str(decoded_data))
+                
+                decoded_data = verify_input_choice(socket_conn, pick_previous_api_call)
+
+                message_length = decoded_data.split(":", -1)[1]
+                print(str(decoded_data))
+                print("length " + message_length)
+                socket_conn.sendall(message2.encode('ascii'))
+                for x in range(int(message_length)):
+                    data = socket_conn.recv(2048)
+                    decoded_data = data.decode('ascii')
+                    info_from_dict = info_from_dict + [decoded_data]
+                    socket_conn.sendall(message2.encode('ascii'))
+                    print(str(decoded_data), end='\n')
+                    
+                data = socket_conn.recv(2048)
+                decoded_data = data.decode('ascii')
+                print(str(decoded_data))
+                print("received all")
+                #print(decoded_data)
+            else:
+                failmsg="fail"
+                print("Wrong input from client",end='\n')
+                socket_conn.sendall(failmsg.encode('ascii'))
+                data = socket_conn.recv(2048)
+                decoded_data = data.decode('ascii')
+                print(str(decoded_data))
+                pass
+                
+                
+        # ask the client whether he wants to continue
+        ans = input('\nContinue viewing previous api calls? (y/n) :')
+        print(" ")
+        if ans == 'y':
+            socket_conn.sendall("continue".encode('ascii'))
+            data = socket_conn.recv(2048)
+            continue
+        else:
+            socket_conn.sendall("end".encode('ascii'))
+            data = socket_conn.recv(2048)
+            break
+            
+    options(socket_conn)
+    
 
 
 def request_api_call():
@@ -140,6 +212,7 @@ def options(socket_conn):
         
     if choice == "4":
         socket_conn.sendall(choice.encode('ascii'))
+        view_api_calls(socket_conn, "pick previous api call")
         pass
         
     else:
@@ -158,6 +231,13 @@ def verify_input_choice(socket_conn, input_type):
     print(str(decoded_data))
     
     input_choice = input(input_type + " (type number):")
+    if input_choice == "":
+        blank = True
+        while(blank):
+            input_choice = input("No input was entered. Please enter an input: ")
+            if input_choice != "":
+                blank = False
+                
     socket_conn.sendall(str(input_choice).encode('ascii')) # Send choice of key to server
     data = socket_conn.recv(2048)
     decoded_data = data.decode('ascii')
@@ -168,6 +248,13 @@ def verify_input_choice(socket_conn, input_type):
         if str(decoded_data) == incorrect_string:
             print("Invalid Choice. Please choose a valid option from the list")
             input_choice = input(input_type + " (type number):")
+            if input_choice == "":
+                blank = True
+                while(blank):
+                    input_choice = input("No input was entered. Please enter an input: ")
+                    if input_choice != "":
+                        blank = False
+                        
             socket_conn.sendall(str(input_choice).encode('ascii'))
             data = socket_conn.recv(2048)
             decoded_data = data.decode('ascii')
@@ -189,6 +276,7 @@ def threaded(test_message, LoginDict):   # for the very first communication, cli
     make_api_call = "make api call"
     
     
+    
     ThreadDict = LoginDict
     message = test_message
     message2 = "length received"
@@ -198,56 +286,8 @@ def threaded(test_message, LoginDict):   # for the very first communication, cli
     
     login(s)    # login is attempted, need this uncommented on both client and server when you want to run it
     #options(s)
+    #view_api_calls(s, "pick previous api call")
 
-    while True:
-        
-        test_func()
-        s.sendall(message.encode('ascii'))  # for the very first communication, client is the sender
-        data = s.recv(2048)
-        decoded_data = data.decode('ascii')
-        #length: 123
-        print('Received from the server :',str(decoded_data))
-        if decoded_data[0:6] == "length":  # if received message is a length message
-            message_length = decoded_data.split(":", -1)[1] 
-            ans = input("Receive message of length " + str(message_length) + "? (y/n)")
-            print(" ")
-            if ans == 'y':
-                s.sendall(message2.encode('ascii'))
-                for x in range(int(message_length)):  # receive all series of message of specified length
-                    data = s.recv(2048)
-                    decoded_data = data.decode('ascii')
-                    keys_from_dict = keys_from_dict + [decoded_data]
-                    s.sendall(message2.encode('ascii'))
-                    print(str(x) + ": " + str(decoded_data))
-                
-                decoded_data = verify_input_choice(s, pick_previous_api_call)
-
-                message_length = decoded_data.split(":", -1)[1]
-                print(str(decoded_data))
-                print("length " + message_length)
-                s.sendall(message2.encode('ascii'))
-                for x in range(int(message_length)):
-                    data = s.recv(2048)
-                    decoded_data = data.decode('ascii')
-                    info_from_dict = info_from_dict + [decoded_data]
-                    s.sendall(message2.encode('ascii'))
-                    print(str(decoded_data), end='\n')
-                print("received all")
-                #print(decoded_data)
-            else:
-                failmsg="fail"
-                print("Wrong input from client",end='\n')
-                s.sendall(failmsg.encode('ascii'))
-                pass
-                
-                
-        # ask the client whether he wants to continue
-        ans = input('\nDo you want to continue communication(y/n) :')
-        print(" ")
-        if ans == 'y':
-            continue
-        else:
-            break
     # close the connection
     s.close()
     
