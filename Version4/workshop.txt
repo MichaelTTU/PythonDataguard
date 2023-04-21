@@ -1,5 +1,5 @@
 View previous api call:
--most of function is built out in threaded()
+>>Now wrapped in function and integrated in options select
 -maybe add more previous api calls to the dict by default
 
 Make new api call
@@ -8,8 +8,8 @@ Make new api call
 -store in api dict afterwards
 
 Censoring data:
--function that runs before each send statement 
->args: string to censor, current_user, clearance_dict
+-make new function that runs before each send statement 
+(args: string to censor, current_user, clearance_dict)
 
 Bonus:
 -GUI?
