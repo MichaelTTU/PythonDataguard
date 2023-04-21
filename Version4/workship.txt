@@ -1,0 +1,18 @@
+View previous api call:
+-most of function is built out in threaded()
+-maybe add more previous api calls to the dict by default
+
+Make new api call
+-look at opensky documentation, function to request by flight / departure loc?
+-option to display aircraft IDs or recent departure locations for lv4?
+-store in api dict afterwards
+
+Censoring data:
+-function that runs before each send statement 
+>args: string to censor, current_user, clearance_dict
+
+Bonus:
+-GUI?
+-Ethernet?
+-Save api call data to encrypted local file? 
+(currently wiped each time the program ends)
