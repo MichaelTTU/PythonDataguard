@@ -1,307 +1,337 @@
-# Import socket module
-# client code
+
+# import socket programming library
 import socket
+
+from opensky_api import OpenSkyApi
+ 
+# import thread module
+# from _thread import *
 import threading
+import datetime
+ 
+print_lock = threading.Lock()
+#test_list = [1,2,3,4]
 
-def clearance_level_check():
-	pass
-
-
-def login(socket_conn):
-    attempted_login = ["username", "password"]
-    attempted_login[0] = input("Enter your username: ")
-    if attempted_login[0] == "":
-        blank = True
-        while(blank):
-            attempted_login[0] = input("No username was entered. Please enter your username: ")
-            if attempted_login[0] != "":
-                blank = False
-    attempted_login[1] = input("Enter your password: ")
-    if attempted_login[1] == "":
-        blank = True
-        while(blank):
-            attempted_login[1] = input("No password was entered. Please enter your password: ")
-            if attempted_login[1] != "":
-                blank = False
+def options(socket_conn, Login_Dict, Clearance_Dict, current_user, API_States_Dict):
     
-    socket_conn.sendall(attempted_login[0].encode('ascii')) # sending username
-    data = socket_conn.recv(2048)
+    print("current user: " + str(current_user))
+    data = socket_conn.recv(2048)   #  receive choice from client
     decoded_data = data.decode('ascii')
-    print(str(decoded_data))
-    
-    socket_conn.sendall(attempted_login[1].encode('ascii')) # sending password
-    data = socket_conn.recv(2048)
-    decoded_data = data.decode('ascii')
-    print(str(decoded_data))
-    
-    socket_conn.sendall("was login successful".encode('ascii'))
-    data = socket_conn.recv(2048)
-    decoded_data = data.decode('ascii')
-    print(str(decoded_data))
-    
-    if str(decoded_data) == "626": # successful login
-        print("Login Successful")
-        options(socket_conn)
-        pass
-    else:
-        print("Invalid username or password")
-        login(socket_conn)
-   
-
-def view_api_calls(socket_conn, pick_previous_api_call):
-
-    message = "message"
-    message2 = "length received"
-    message_length = -1
-    keys_from_dict = []
-    info_from_dict = []
-    
-    while True:
-
-        test_func()
-        socket_conn.sendall(message.encode('ascii'))  # for the very first communication, client is the sender
-        data = socket_conn.recv(2048)
-        decoded_data = data.decode('ascii')
-        #length: 123
-        print('Received from the server :',str(decoded_data))
-        if decoded_data[0:6] == "length":  # if received message is a length message
-            message_length = decoded_data.split(":", -1)[1] 
-            ans = input("Receive message of length " + str(message_length) + "? (y/n)")
-            print(" ")
-            if ans == 'y':
-                socket_conn.sendall(message2.encode('ascii'))
-                for x in range(int(message_length)):  # receive all series of message of specified length
-                    data = socket_conn.recv(2048)
-                    decoded_data = data.decode('ascii')
-                    keys_from_dict = keys_from_dict + [decoded_data]
-                    socket_conn.sendall(message2.encode('ascii'))
-                    print(str(x) + ": " + str(decoded_data))
-                
-                decoded_data = verify_input_choice(socket_conn, pick_previous_api_call)
-
-                message_length = decoded_data.split(":", -1)[1]
-                print(str(decoded_data))
-                print("length " + message_length)
-                socket_conn.sendall(message2.encode('ascii'))
-                for x in range(int(message_length)):
-                    data = socket_conn.recv(2048)
-                    decoded_data = data.decode('ascii')
-                    info_from_dict = info_from_dict + [decoded_data]
-                    socket_conn.sendall(message2.encode('ascii'))
-                    print(str(decoded_data), end='\n')
-                    
-                data = socket_conn.recv(2048)
-                decoded_data = data.decode('ascii')
-                print(str(decoded_data))
-                print("received all")
-                #print(decoded_data)
-            else:
-                failmsg="fail"
-                print("Wrong input from client",end='\n')
-                socket_conn.sendall(failmsg.encode('ascii'))
-                data = socket_conn.recv(2048)
-                decoded_data = data.decode('ascii')
-                print(str(decoded_data))
-                pass
-                
-                
-        # ask the client whether he wants to continue
-        ans = input('\nContinue viewing previous api calls? (y/n) :')
-        print(" ")
-        if ans == 'y':
-            socket_conn.sendall("continue".encode('ascii'))
-            data = socket_conn.recv(2048)
-            continue
-        else:
-            socket_conn.sendall("end".encode('ascii'))
-            data = socket_conn.recv(2048)
-            break
-            
-    options(socket_conn)
-    
-
-
-def request_api_call():
-	pass
-
-def options(socket_conn):
-    
-    print(" ")
-    print("1) Add a user")
-    print("2) Logout")
-    print("3) Make API call")
-    print("4) View previous API calls")
-    
-    choice = input("choose from the listed options: ")
+    choice = str(decoded_data)
     
     if choice == "1":
-        # ADD A USER
         print("checking user security level")
-        socket_conn.sendall(choice.encode('ascii'))
-        data = socket_conn.recv(2048)
-        decoded_data = data.decode('ascii')
         
-        
-        if str(decoded_data) == "1001":
-            print("Current user is not authorized to add a new user")
-            options(socket_conn)
+        if Clearance_Dict[current_user] < 4:
+            print(str(current_user) + " is not authorized to add a new user")
+            socket_conn.sendall("1001".encode('ascii'))
+            current_user = options(socket_conn, Login_Dict, Clearance_Dict, current_user, API_States_Dict)
             # return back to option select
         else:
-            login_pair = ["username", "password"]
-            login_pair[0] = input("Enter a username for the new user: ")
-            if login_pair[0] == "":
-                blank = True
-                while(blank):
-                    login_pair[0] = input("No username was entered. Please enter a username: ")
-                    if login_pair[0] != "":
-                        blank = False
-
-            login_pair[1] = input("Enter a password for the new user: ")
-            if login_pair[1] == "":
-                blank = True
-                while(blank):
-                    login_pair[1] = input("No password was entered. Please enter a password: ")
-                    if login_pair[1] != "":
-                        blank = False            
+            new_user = ["",""]
+            socket_conn.sendall("authorized".encode('ascii'))
             
-            socket_conn.sendall(login_pair[0].encode('ascii'))
             data = socket_conn.recv(2048)
             decoded_data = data.decode('ascii')
-            print(str(decoded_data))
+            socket_conn.sendall("received".encode('ascii'))
+            new_user[0] = str(decoded_data)
             
-            socket_conn.sendall(login_pair[1].encode('ascii'))
             data = socket_conn.recv(2048)
             decoded_data = data.decode('ascii')
-            print(str(decoded_data))
-            if str(decoded_data) == "A User with this username already exists":
-                print(str(decoded_data) + ". Returning to options select screen")
-                options(socket_conn)
+            new_user[1] = str(decoded_data)
             
-            clearance_level = input("Choose a clearance level for the new user (between 3 and 0): ")
-            if clearance_level.isdigit() and int(clearance_level) >= 0 and int(clearance_level) <= 3:
-                socket_conn.sendall(str(int(clearance_level)).encode('ascii'))
+            if new_user[0] in Login_Dict.keys():
+                socket_conn.sendall("A User with this username already exists".encode('ascii'))
+                print("A User with this username already exists")
+                options(socket_conn, Login_Dict, Clearance_Dict, current_user, API_States_Dict)
+            else:
+                socket_conn.sendall("Username is unique".encode('ascii'))
+                Login_Dict[new_user[0]] = new_user[1]
+                print(Login_Dict)
+            
                 data = socket_conn.recv(2048)
                 decoded_data = data.decode('ascii')
-                print(str(decoded_data))
-                options(socket_conn)
-                
-                pass
-            else:
-                checking = True
-                while(checking):
-                    print("Unacceptable clearance level chosen. Choose a clearance level for the new user (between 3 and 0): ")
-                    clearance_level = input("Choose a clearance level for the new user (between 3 and 0): ")
-                    
-                    if clearance_level.isdigit() and int(clearance_level) >= 0 and int(clearance_level) <= 3:
-                        socket_conn.sendall(str(int(clearance_level)).encode('ascii'))
-                        data = socket_conn.recv(2048)
-                        decoded_data = data.decode('ascii')
-                        print(str(decoded_data))
-                        checking = False
-                options(socket_conn)
-                        
-                    
-    if choice == "2":
-        socket_conn.sendall(choice.encode('ascii'))
-        login(socket_conn)
-        pass
+                Clearance_Dict[new_user[0]] = int(str(decoded_data))
+                receipt_string = "User " + str(new_user[0]) + " created with clearance level " + str(decoded_data)
+                socket_conn.sendall(receipt_string.encode('ascii'))
+                options(socket_conn, Login_Dict, Clearance_Dict, current_user, API_States_Dict)
+            
         
+    if choice == "2": # LOGOUT
+        current_user = "NoUser"
+        print("current user: " + current_user)
+        login(socket_conn, Login_Dict, Clearance_Dict, current_user, API_States_Dict)
+        pass
+    
     if choice == "3":
-        socket_conn.sendall(choice.encode('ascii'))
         pass
         
     if choice == "4":
-        socket_conn.sendall(choice.encode('ascii'))
-        view_api_calls(socket_conn, "pick previous api call")
-        pass
-        
-    else:
-        socket_conn.sendall(choice.encode('ascii'))
+        view_api_calls(socket_conn, API_States_Dict, current_user, Login_Dict, Clearance_Dict)
         pass
 
-def test_func():
-    print("this is from the test function")
 
-def verify_input_choice(socket_conn, input_type):
-    incorrect_string = "13112"
+    #receive option choice
+    #if tree
+    #return to options depending on tree
+
+
+def login(socket_conn, Login_Dict, Clearance_Dict, current_user, API_States_Dict):
+    attempted_login = ["username", "password"]
     
-    socket_conn.sendall(input_type.encode('ascii')) # Send type of expected input to server
     data = socket_conn.recv(2048)
     decoded_data = data.decode('ascii')
-    print(str(decoded_data))
-    
-    input_choice = input(input_type + " (type number):")
-    if input_choice == "":
-        blank = True
-        while(blank):
-            input_choice = input("No input was entered. Please enter an input: ")
-            if input_choice != "":
-                blank = False
-                
-    socket_conn.sendall(str(input_choice).encode('ascii')) # Send choice of key to server
+    attempted_login[0] = str(decoded_data)
+    return_msg = "received "+ str(decoded_data)
+    print("attempted login with username: "+ str(decoded_data))
+    socket_conn.sendall(return_msg) 
+
     data = socket_conn.recv(2048)
     decoded_data = data.decode('ascii')
-    verifying = True
-    while verifying:
-        print("in while loop")
+    if str(decoded_data) == "":
+        print("aint shit here")
+    attempted_login[1] = str(decoded_data)
+    return_msg = "received "+ str(decoded_data)
+    print("attempted login with password: "+ str(decoded_data))
+    socket_conn.sendall(return_msg)
+    
+    data = socket_conn.recv(2048)
+    
+    if attempted_login[0] in Login_Dict.keys():
+        print("username exists")
         
-        if str(decoded_data) == incorrect_string:
-            print("Invalid Choice. Please choose a valid option from the list")
-            input_choice = input(input_type + " (type number):")
-            if input_choice == "":
-                blank = True
-                while(blank):
-                    input_choice = input("No input was entered. Please enter an input: ")
-                    if input_choice != "":
-                        blank = False
-                        
-            socket_conn.sendall(str(input_choice).encode('ascii'))
-            data = socket_conn.recv(2048)
-            decoded_data = data.decode('ascii')
+        if Login_Dict[attempted_login[0]] == attempted_login[1]: # successful login
+            print("login successful")
+            socket_conn.sendall("626".encode('ascii'))
+            options(socket_conn, Login_Dict, Clearance_Dict, attempted_login[0], API_States_Dict) # change current user on successful login
         else:
-            verifying = False
+            print("invalid username or password")  # failed login
+            socket_conn.sendall("8008".encode('ascii'))
+            login(socket_conn, Login_Dict, Clearance_Dict, current_user, API_States_Dict)
+    else:
+        print("invalid username or password")  # failed login
+        socket_conn.sendall("8008".encode('ascii'))
+        login(socket_conn, Login_Dict, Clearance_Dict, current_user, API_States_Dict)
+    
+    return attempted_login[0]
+            
+
+def view_api_calls(socket_conn, API_States_Dict, current_user, Login_Dict, Clearance_Dict):
+
+    print("current user: " + str(current_user))
+
+    while True:
+ 
+        # data received from client
+        data = socket_conn.recv(2048)   # for the very first communcation, server is the receiver
+        incoming_message = str(data.decode('ascii'))
+        print("Received from client: " + incoming_message)
+        if not data:
+            print('Bye')
+             
+            # lock released on exit
+            print_lock.release()
+            break
+ 
+        blank_line = " "
+        length_message = "length:" + str(len(API_States_Dict.keys()))
+        socket_conn.sendall(length_message.encode('ascii'))  # sending length of API Dict
+        data = socket_conn.recv(2048)
+        decoded_data = data.decode('ascii')
+        if decoded_data == "length received":
+            incoming_message = str(data.decode('ascii'))
+            key_choices = []
+            
+            print("Received from client: " + incoming_message)  # Receive confirmation of length from Client
+            for x in API_States_Dict.keys():  # Send each key from the API Dict
+                socket_conn.sendall(x.encode('ascii'))
+                #c.sendall(blank_line.encode('ascii'))
+                key_choices = key_choices + [x]
+                data = socket_conn.recv(2048)
+                
+            print("sent all keys in dict")
+            ##extra stuff here
+            decoded_data = verify_input_choice(socket_conn, API_States_Dict)
+                
+            #if (1 <= x && x <= 100)
+            
+            #=IF(COUNTIF(data,E5)>0,"Yes","No")
+            
+            print("Client key choice: " + str(decoded_data))
+            AccessStringChoice = API_States_Dict.keys()[int(decoded_data)]
+            lengthline = "Length:" + str(len(API_States_Dict[AccessStringChoice][0].keys()))
+            socket_conn.sendall(lengthline.encode('ascii'))  # Send length
+            data = socket_conn.recv(2048)
+            print(lengthline)  # print lengthline
+            
+            for x in API_States_Dict[AccessStringChoice][0].keys():
+                sendline = str(x) + ": " + str(API_States_Dict[AccessStringChoice][0][x])
+                socket_conn.sendall(sendline.encode('ascii'))
+                data = socket_conn.recv(2048)
+                print(sendline)
+                
+            send_complete_string = "sent all info in " + AccessStringChoice
+            print(send_complete_string)
+            socket_conn.sendall(send_complete_string.encode('ascii'))
+        else: 
+            #data = c.recv(2048)
+            #print"
+            #decoded_data = data.decode('ascii')
+            if decoded_data == 'fail':
+                print("wrong input from client")
+                socket_conn.sendall("wrong input from client".encode('ascii'))
+                pass
+                
+        data = socket_conn.recv(2048)
+        decoded_data = data.decode('ascii')
+        if str(decoded_data) == "continue":
+            socket_conn.sendall("continuing api call viewing".encode('ascii'))
+            pass
+        else:
+            socket_conn.sendall("ending api call viewing".encode('ascii'))
+            break
+            
+    options(socket_conn, Login_Dict, Clearance_Dict, current_user, API_States_Dict)
+    
+    
+    
+
+def verify_input_choice(socket_conn, API_States_Dict):
+    
+    invalid_string = "Invalid Choice. Please choose a valid option from the list"
+    
+    data = socket_conn.recv(2048) ##
+    decoded_data = data.decode('ascii') # Receive the type of input expected
+    input_type = str(decoded_data)
+    input_message = "input type of " + input_type + " received"
+    socket_conn.sendall(input_message.encode('ascii'))
+
+    data = socket_conn.recv(2048)##
+    decoded_data = data.decode('ascii') # Receive the choice of key from Client
+    print("type of data received: " + str(type(decoded_data)))
+    
+    if input_type == "pick previous api call":
+        print("if statement for " + input_type)
+    
+        verifying = True
+        while verifying:
+            print("in while loop")
+            if str(decoded_data).isdigit():
+                
+                if ((int(str(decoded_data)) >= 0) and int(str(decoded_data)) <= len(API_States_Dict.keys())):
+                    verifying = False
+                    print("valid input received")
+                else:
+                    print("input fails in-range check")
+                    socket_conn.sendall("13112".encode('ascii'))
+                    print("send invalid input key")
+                    data = socket_conn.recv(2048)
+                    decoded_data = data.decode('ascii')
+            else:
+                print("input fails isdigit() check")
+                socket_conn.sendall("13112".encode('ascii'))
+                print("sent invalid input key")
+                data = socket_conn.recv(2048)
+                decoded_data = data.decode('ascii')
+        
+    if input_type == "username password":
+        print("if statement for " + input_type)
+        pass
+    
+    if input_type == "make api call":
+        print("if statement for " + input_type)
+        pass
     
     return decoded_data
 
 
-def threaded(test_message, LoginDict):   # for the very first communication, client is the sender
+def convert_message():
+    print("make this")
+
+def API_get_states(API_States_Dict, current_user):
+    api = OpenSkyApi()
+    s = api.get_states()
+    AccessTimestamp = datetime.datetime.now()
+    converted_dict = {}
+    
+    for x in vars(s.states[0]):
+        converted_dict[x] = str(vars(s.states[0])[x])
+    
+    Access_Info_String = current_user + "---" + str(AccessTimestamp) + "---" + str(converted_dict["origin_country"])
+    print(Access_Info_String)
+    API_States_Dict[Access_Info_String] = [converted_dict, 3]
+    
+    for x in vars(s.states[0]):
+        message = x + ": " + str(vars(s.states[0])[x])
+        encoded_message_line = message.encode('ascii')
+        #encoded_message_list = message_list + [message_line]
+
+    return API_States_Dict
+
+ 
+# thread function
+def threaded(test_message, test_list, test_dict, current_user, API_States_Dict, Login_Dict, Clearance_Dict):   # for the very first communcation, server is the receiver
     
     host = "10.175.226.40"
     port = 12345
-    s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-    s.connect((host,port))
+    test_list[0] = test_list[0] + 5
+    test_dict["FromThread"] = 2
+    #API_Dict[Access_Info_String] = [sorted_flight_info, SecurityLevel]
+    API_States_Dict = API_get_states(API_States_Dict, current_user)
     
-    pick_previous_api_call = "pick previous api call"
-    username_password = "username password"
-    make_api_call = "make api call"
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind((host, port))
+    print("socket binded to port", port)
+ 
+    # put the socket into listening mode
+    s.listen(5)
+    print("socket is listening")
     
+    #while True:
+    c, addr = s.accept()
+    print_lock.acquire()
+        #if addr[0]:
+            #print("Connection established")
+            #break
     
+    print('Connected to :', addr[0], ':', addr[1])
+    #encoded_message_list = message_list
     
-    ThreadDict = LoginDict
-    message = test_message
-    message2 = "length received"
-    message_length = -1
-    keys_from_dict = []
-    info_from_dict = []
-    
-    login(s)    # login is attempted, need this uncommented on both client and server when you want to run it
-    #options(s)
-    #view_api_calls(s, "pick previous api call")
+    current_user = login(c, Login_Dict, Clearance_Dict, current_user, API_States_Dict) #login is attempted, need this uncommented on both client and server when you want to run it
+    #options(c, Login_Dict, Clearance_Dict, current_user)
+    #view_api_calls(c, API_States_Dict, current_user)
 
-    # close the connection
+    # connection closed
+    c.close()
     s.close()
-    
+ 
  
 def Main():
-    LoginDict = {"Superuser":'Superpassword'} # Master dictionary that holds all login-password pairs
-    ClearanceDict = {"Superuser":4} # Master dictionary that holds all clearance levels 
+    test_list = [1,2,3,4]
+    Clearance_Dict = {"Superuser" : 4, "Babyuser" : 1}
+    current_user = "Superuser"
+    #current_user = "Babyuser"
+    Login_Dict = {"Superuser" : "Super", "Babyuser" : "Baby"}
     
-    test_message = "poop from client"
-    thread1 = threading.Thread(target=threaded, args=(test_message, LoginDict))
-    thread1.start()
-    thread1.join()
-    print("done!")
-
+    #API_Dict[Access_Info_String] = [sorted_flight_info, SecurityLevel]
+    test_dict = {"Placeholder": 1}
+    API_States_Dict = {"DefaultCall" : [test_dict, 1]}
+    test_message = "poop"
+    #host = "10.175.226.40"
+ 
+    # reserve a port on your computer
+    # in our case it is 12345 but it
+    # can be anything
+    port = 12345
+    print("Current API dict: ")
+    print(API_States_Dict)
+    t1 = threading.Thread(target=threaded, args=(test_message, test_list, test_dict, current_user, API_States_Dict, Login_Dict, Clearance_Dict))
+    t1.start()
+    t1.join()
+    print("Resulting API dict: ")
+    print(API_States_Dict)
+ 
  
 if __name__ == '__main__':
     Main()
+
