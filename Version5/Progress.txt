@@ -5,3 +5,23 @@ To-do:
 >>Let user choose the airport to call from
 >>Let user pick from the most recent flights? (need siginficantly more comms for this?)
 >>Add departures function to mirror the arrivals api request function?
+
+
+
+PASTED FROM PREVIOUS WORKSHOP FILE:
+-maybe add more previous api calls to the dict by default
+
+Make new api call
+-look at opensky documentation, function to request by flight / departure loc?
+-option to display aircraft IDs or recent departure locations for lv4?
+-store in api dict afterwards
+
+Censoring data:
+-make new function that runs before each send statement 
+(args: string to censor, current_user, clearance_dict)
+
+Bonus:
+-GUI?
+-Ethernet?
+-Save api call data to encrypted local file? 
+(currently wiped each time the program ends)
