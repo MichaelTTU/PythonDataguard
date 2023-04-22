@@ -1,0 +1,7 @@
++Basic Functions of all 4 Options are working
++Request API call will make an api call for the most recent flight at a specific airport
+
+To-do:
+>>Let user choose the airport to call from
+>>Let user pick from the most recent flights? (need siginficantly more comms for this?)
+>>Add departures function to mirror the arrivals api request function?
